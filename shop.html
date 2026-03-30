@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Shop</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f5f5f5; color: #222; }
+  .wrap { max-width: 700px; margin: auto; padding: 20px; }
+  h2 { font-size: 18px; margin-bottom: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .tag  { font-size: 11px; color: #888; }
+  .name { font-size: 13px; font-weight: 600; }
+  .price { font-size: 12px; color: #555; }
+  .btn  { margin-top: auto; padding: 6px 10px; border: 1px solid #ccc; border-radius: 6px; background: transparent; font-size: 12px; cursor: pointer; }
+  .btn:hover { background: #eee; }
+  .qty  { display: flex; align-items: center; gap: 8px; margin-top: auto; }
+  .qb   { width: 26px; height: 26px; border: 1px solid #ccc; border-radius: 4px; background: transparent; font-size: 16px; cursor: pointer; }
+  .qb:hover { background: #eee; }
+  .cart { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 16px; }
+  .row  { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+  .total { display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; margin-top: 12px; }
+  .checkout { width: 100%; padding: 10px; background: #222; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 12px; }
+  .checkout:hover { background: #444; }
+  .empty { text-align: center; color: #aaa; padding: 20px 0; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2>Shop</h2>
+  <div class="grid" id="grid"></div>
+  <h2>Cart <span id="count" style="font-size:13px;font-weight:400;color:#888"></span></h2>
+  <div class="cart" id="cart"><div class="empty">Your cart is empty</div></div>
+</div>
+
+<script>
+const ITEMS = [
+  { id: 1, name: "Field Watch",    price: 189, tag: "Accessories" },
+  { id: 2, name: "Canvas Tote",    price: 54,  tag: "Bags" },
+  { id: 3, name: "Wool Scarf",     price: 76,  tag: "Apparel" },
+  { id: 4, name: "Pour-Over",      price: 42,  tag: "Kitchen" },
+  { id: 5, name: "Linen Notebook", price: 28,  tag: "Stationery" },
+  { id: 6, name: "Desk Lamp",      price: 135, tag: "Home" },
+];
+
+let cart = {};
+
+function render() {
+  // Render product grid
+  document.getElementById("grid").innerHTML = ITEMS.map(p => {
+    const q = cart[p.id] || 0;
+    return `<div class="card">
+      <div class="tag">${p.tag}</div>
+      <div class="name">${p.name}</div>
+      <div class="price">$${p.price}</div>
+      ${q
+        ? `<div class="qty">
+            <button class="qb" onclick="upd(${p.id}, -1)">−</button>
+            <span>${q}</span>
+            <button class="qb" onclick="upd(${p.id}, 1)">+</button>
+           </div>`
+        : `<button class="btn" onclick="add(${p.id})">+ Add</button>`
+      }
+    </div>`;
+  }).join("");
+
+  // Render cart
+  const items = ITEMS.filter(p => cart[p.id] > 0);
+  const sub   = items.reduce((s, p) => s + p.price * (cart[p.id] || 0), 0);
+  const ship  = items.length && sub < 100 ? 12 : 0;
+
+  document.getElementById("count").textContent =
+    items.length ? `(${items.length} item${items.length > 1 ? "s" : ""})` : "";
+
+  document.getElementById("cart").innerHTML = items.length
+    ? `${items.map(p => `
+        <div class="row">
+          <span>${p.name} × ${cart[p.id]}</span>
+          <span>$${(p.price * cart[p.id]).toFixed(2)}</span>
+        </div>`).join("")}
+       <div class="row"><span>Shipping</span><span>${ship ? "$" + ship : "Free ✓"}</span></div>
+       <div class="total"><span>Total</span><span>$${(sub + ship).toFixed(2)}</span></div>
+       <button class="checkout">Checkout →</button>`
+    : `<div class="empty">Your cart is empty</div>`;
+}
+
+function add(id)      { cart[id] = (cart[id] || 0) + 1; render(); }
+function upd(id, d)   { const n = (cart[id] || 0) + d; if (n <= 0) delete cart[id]; else cart[id] = n; render(); }
+
+render();
+</script>
+</body>
+</html>
